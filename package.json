@@ -2,7 +2,6 @@
   "name": "react-native-orientation-listener",
   "version": "0.0.2",
   "description": "A react-native library for obtaining current device orientation",
-  "main": "index.js",
   "keywords": [
     "react-native",
     "orientation",
