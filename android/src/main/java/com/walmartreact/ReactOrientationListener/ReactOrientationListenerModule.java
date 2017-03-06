@@ -15,6 +15,9 @@ import android.content.Context;
 import android.hardware.SensorManager;
 import android.view.OrientationEventListener;
 import android.os.Build;
+import android.content.Context;
+import android.view.Surface;
+import android.view.WindowManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +26,7 @@ public class ReactOrientationListenerModule extends ReactContextBaseJavaModule {
 
   ReactApplicationContext reactContext;
   OrientationEventListener mOrientationListener;
+  String lastOrientation = null;
 
   public ReactOrientationListenerModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -33,18 +37,20 @@ public class ReactOrientationListenerModule extends ReactContextBaseJavaModule {
       SensorManager.SENSOR_DELAY_NORMAL) {
       @Override
       public void onOrientationChanged(int orientation) {
-        WritableNativeMap params = new WritableNativeMap();
-        String orientationValue = "";
-        if(orientation == 0) {
-          orientationValue = "PORTRAIT";
-        } else {
-          orientationValue = "LANDSCAPE";
+        String currentOrientation = getRotation();
+        if (lastOrientation != null && currentOrientation == lastOrientation) {
+          return;
         }
-        params.putString("orientation", orientationValue);
+        lastOrientation = currentOrientation;
+
+        WritableNativeMap params = new WritableNativeMap();
+        params.putString("orientation", currentOrientation);
         params.putString("device", getDeviceName());
-        thisContext
-          .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-          .emit("orientationDidChange", params);
+        if (thisContext.hasActiveCatalystInstance()) {
+          thisContext
+            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                  .emit("orientationDidChange", params);
+        }
       }
     };
 
@@ -74,6 +80,18 @@ public class ReactOrientationListenerModule extends ReactContextBaseJavaModule {
       return s;
     } else {
       return Character.toUpperCase(first) + s.substring(1);
+    }
+  }
+
+  private String getRotation() {
+    WindowManager windowManager = (WindowManager) reactContext.getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+    final int rotation = windowManager.getDefaultDisplay().getOrientation();
+    switch(rotation) {
+      case Surface.ROTATION_0:
+      case Surface.ROTATION_180:
+        return "PORTRAIT";
+      default:
+        return "LANDCAPE";
     }
   }
 
