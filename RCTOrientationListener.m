@@ -6,7 +6,6 @@
 //
 
 #import "RCTOrientationListener.h"
-#import "RCTBridge.h"
 
 @implementation RCTOrientationListener
 
